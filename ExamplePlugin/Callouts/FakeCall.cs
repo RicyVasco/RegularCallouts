@@ -42,6 +42,8 @@ namespace RegularCallouts.Callouts
         private bool TalkedToCaller;
         private bool CalloutRunning;
         private bool AttackPlayer;
+        DateTime StartTimer;
+        bool GotSlapped;
 
         private List<string> DialogWithCaller = new List<string>
         {
@@ -212,7 +214,7 @@ namespace RegularCallouts.Callouts
                             }
                             if(Game.LocalPlayer.Character.DistanceTo(Terminator) <= 5f && Game.LocalPlayer.Character.IsOnFoot && TalkedToCaller == true && AttackPlayer == false)
                             {
-                                Game.LocalPlayer.Character.IsPositionFrozen = true;
+                                Game.LocalPlayer.HasControl = false;
                                 Game.LocalPlayer.Character.TurnToFaceEntity(Terminator);
                                 Terminator.Face(Game.LocalPlayer.Character);
                                 Game.DisplaySubtitle("~b~You:~s~ What the...");
@@ -225,14 +227,33 @@ namespace RegularCallouts.Callouts
                                 Utils.RemoveParticle(Particle1);
                                 Utils.StopLoopedFX(Particle2);
                                 Utils.RemoveParticle(Particle2);
+                                Functions.SetPedArrestIgnoreGroup(Terminator, true);
+                                Terminator.KeepTasks = true;
                                 Terminator.Tasks.FightAgainst(Game.LocalPlayer.Character);
+                                StartTimer = DateTime.Now;
                                 AttackPlayer = true;
                             }
                             if(AttackPlayer == true)
                             {
-                                if(Game.LocalPlayer.Character.HasBeenDamagedByAnyPed)
+                                if (StartTimer.AddSeconds(8) < DateTime.Now && !Game.LocalPlayer.Character.HasBeenDamagedByAnyPed && !GotSlapped)
                                 {
-                                    Game.LocalPlayer.Character.IsPositionFrozen = false;
+                                    GotSlapped = true;
+                                    Game.LocalPlayer.HasControl = true;
+                                    Game.LocalPlayer.Character.IsRagdoll = true;
+                                    Game.FadeScreenOut(1000, true);
+                                    Terminator.Delete();
+                                    Caller.Delete();
+                                    World.TimeOfDay = World.TimeOfDay + TimeSpan.FromHours(6);
+                                    GameFiber.Sleep(1000);
+                                    Game.FadeScreenIn(1000, true);
+                                    Game.LocalPlayer.Character.IsRagdoll = false;
+                                    Game.DisplaySubtitle("~b~You:~s~ What was that??");
+                                    this.End();
+                                }
+                                if (Game.LocalPlayer.Character.HasBeenDamagedByAnyPed && !GotSlapped)
+                                {
+                                    GotSlapped = true;
+                                    Game.LocalPlayer.HasControl = true;
                                     Game.LocalPlayer.Character.IsRagdoll = true;
                                     Game.FadeScreenOut(1000, true);
                                     Terminator.Delete();
@@ -404,11 +425,14 @@ namespace RegularCallouts.Callouts
             Caller.BlockPermanentEvents = true;
             AllCalloutPeds.Add(Caller);
             Caller.Tasks.PlayAnimation(new AnimationDictionary("friends@frj@ig_1"), "wave_a", 1f, AnimationFlags.Loop | AnimationFlags.SecondaryTask);
-            Terminator = new Ped("a_m_y_musclbeac_01", SpawnPoint, 0f);
-            Terminator.IsPersistent = true;
-            Terminator.BlockPermanentEvents = true;
-            Terminator.IsInvincible = true;
-            Terminator.IsVisible = false;
+            Terminator = new Ped("a_m_y_musclbeac_01", SpawnPoint, 0f)
+            {
+                IsPersistent = true,
+                BlockPermanentEvents = true,
+                IsInvincible = true,
+                IsVisible = false
+        };
+            
             AllCalloutPeds.Add(Terminator);
         }
         private void GameEnd()
@@ -426,7 +450,8 @@ namespace RegularCallouts.Callouts
         public override void End()
         {
             CalloutRunning = false;
-            foreach(Ped p in AllCalloutPeds)
+            GotSlapped = true;
+            foreach (Ped p in AllCalloutPeds)
             {
                 if(p.Exists())
                 {
@@ -434,6 +459,7 @@ namespace RegularCallouts.Callouts
                 }
             }
             if (SpawnBlip.Exists()) SpawnBlip.Delete();
+            Game.LocalPlayer.HasControl = true;
             Game.LocalPlayer.Character.IsPositionFrozen = false;
             Functions.PlayScannerAudio("WE_ARE_CODE_4 NO_FURTHER_UNITS_REQUIRED");
             base.End();

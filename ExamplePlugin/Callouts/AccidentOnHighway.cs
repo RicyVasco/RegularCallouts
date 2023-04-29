@@ -117,8 +117,12 @@ namespace RegularCallouts.Callouts
         public override bool OnBeforeCalloutDisplayed()
         {
             SpawnPoint = new Vector3(750.059f, -50.3238678f, 58.8495979f);
+            if (Game.LocalPlayer.Character.DistanceTo(SpawnPoint) <= 150f)
+            {
+                Utils.AddLog("Too close to Highway spawnpoint. Minimum distance: 150f, your distance: " + Game.LocalPlayer.Character.DistanceTo(SpawnPoint));
+            }
             AddMinimumDistanceCheck(101f, SpawnPoint);
-            AddMaximumDistanceCheck(1000f, SpawnPoint);
+            //AddMaximumDistanceCheck(1000f, SpawnPoint);
             CalloutMessage = "Major Accident on Highway";
             CalloutPosition = SpawnPoint;
             ShowCalloutAreaBlipBeforeAccepting(SpawnPoint, 100f);

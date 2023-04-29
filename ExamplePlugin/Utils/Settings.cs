@@ -35,7 +35,7 @@ namespace RegularCallouts.Stuff
         internal static bool StolenDiplomaticCar;
         internal static bool TrafficStopAssistance;
         internal static bool LostSuspect;
-        public static readonly string CalloutVersion = "1.1.5";
+        public static readonly string CalloutVersion = "1.1.6";
 
         internal static Keys EndCalloutKey;
         internal static Keys DialogKey;
@@ -46,7 +46,7 @@ namespace RegularCallouts.Stuff
             InitializationFile initializationFile = new InitializationFile("Plugins/LSPDFR/RegularCallouts.ini"); //This is where you put the path to the ini, starting in GTA folder
             initializationFile.Create();
             Game.LogTrivial("Initializing Config for Regular Callouts");
-            Settings.FakeCall = initializationFile.ReadBoolean("Callout Enable/Disable", "FakeCall", false);
+            Settings.FakeCall = initializationFile.ReadBoolean("Callout Enable/Disable", "FakeCall", true);
             Settings.AccidentOnHighway = initializationFile.ReadBoolean("Callout Enable/Disable", "AccidentOnHighway", true);
             Settings.AnimalCarCrash = initializationFile.ReadBoolean("Callout Enable/Disable", "AnimalCarCrash", true);
             Settings.AssistancePark = initializationFile.ReadBoolean("Callout Enable/Disable", "AssistancePark", true);
